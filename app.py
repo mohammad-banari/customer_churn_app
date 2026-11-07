@@ -5,7 +5,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import streamlit as st
-from groq import Groq
+from groq import (
+    Groq,
+    AuthenticationError,
+    RateLimitError,
+    APIConnectionError,
+    APIStatusError,
+)
 
 
 # -----------------------------------
@@ -93,7 +99,10 @@ def get_setting(name, default=None):
 
 def generate_text(chat_history):
     """Send the full conversation to Groq."""
-    api_key = get_setting("GROQ_API_KEY")
+    api_key = (
+        st.session_state.get("groq_api_key_input", "").strip()
+        or get_setting("GROQ_API_KEY")
+    )
 
     if not api_key:
         raise ValueError(
@@ -435,6 +444,16 @@ with chatbot_tab:
         "چت‌بات به‌صورت خودکار به فایل CSV یا نتایج پیش‌بینی دسترسی ندارد."
     )
 
+    st.text_input(
+        "Groq API key (optional if configured in Streamlit Secrets)",
+        type="password",
+        key="groq_api_key_input",
+        help=(
+            "Use a newly generated key. It is held only in this Streamlit "
+            "session and is sent to Groq when you chat."
+        ),
+    )
+
     if not st.session_state.chatbot_started:
         if st.button(
             "💬 Start Chatbot",
@@ -483,11 +502,22 @@ with chatbot_tab:
                         },
                     ]
 
-                except Exception as e:
-                    st.error(f"Error: {type(e).__name__}: {str(e)}")
-                    st.exception(e)
+                except AuthenticationError:
+                    st.error("Groq rejected the API key. Enter a valid replacement key.")
+                except RateLimitError:
+                    st.error("Groq usage limit reached. Please try again later.")
+                except APIConnectionError:
+                    st.error("Could not connect to Groq. Please try again.")
+                except APIStatusError:
                     st.error(
-                        "دریافت پاسخ ناموفق بود. "
-                        "کلید Groq، نام مدل، اتصال اینترنت و "
-                        "محدودیت استفاده را بررسی کرده و دوباره تلاش کنید."
+                        "Groq could not complete the request. Check the configured "
+                        "GROQ_MODEL and your Groq account."
                     )
+                except ValueError:
+                    st.error(
+                        "Enter your new Groq API key above or configure "
+                        "GROQ_API_KEY in Streamlit Secrets. If a key is already "
+                        "configured, Groq may have returned an empty response."
+                    )
+                except Exception:
+                    st.error("Could not receive a response. Please try again.")
