@@ -483,7 +483,9 @@ with chatbot_tab:
                         },
                     ]
 
-                except Exception:
+                except Exception as e:
+                    st.error(f"Error: {type(e).name}: {str(e)}")
+                    st.exception(e)
                     st.error(
                         "دریافت پاسخ ناموفق بود. "
                         "کلید Groq، نام مدل، اتصال اینترنت و "
