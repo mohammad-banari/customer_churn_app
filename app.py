@@ -1,4 +1,4 @@
-import os
+ import os
 import pickle
 from pathlib import Path
 
@@ -484,7 +484,7 @@ with chatbot_tab:
                     ]
 
                 except Exception as e:
-                    st.error(f"Error: {type(e).name}: {str(e)}")
+                    st.error(f"Error: {type(e).__name__}: {str(e)}")
                     st.exception(e)
                     st.error(
                         "دریافت پاسخ ناموفق بود. "
