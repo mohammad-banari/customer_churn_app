@@ -99,7 +99,7 @@ def get_setting(name, default=None):
 
 def generate_text(chat_history):
     """Send the full conversation to Groq."""
-    api_key = get_setting("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")
+    api_key = get_setting("paste-your-new-key-here")
 
     if not api_key:
         raise ValueError(
