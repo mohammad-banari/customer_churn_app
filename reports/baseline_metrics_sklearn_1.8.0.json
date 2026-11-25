@@ -1,0 +1,63 @@
+{
+  "scikit_learn_version": "1.8.0",
+  "python_version": "3.13.5",
+  "dataset_filename": "Customer-Churn-Records.csv",
+  "dataset_sha256": "2abdc051d9170540777bf35652ccb02a6ce9c9645892b078762cb729039e44d2",
+  "feature_names": [
+    "Age",
+    "NumOfProducts",
+    "EstimatedSalary",
+    "Balance",
+    "CreditScore",
+    "Tenure"
+  ],
+  "target": "Exited",
+  "split_seed": 42,
+  "stratified": true,
+  "train_rows": 8000,
+  "test_rows": 2000,
+  "train_churn_count": 1630,
+  "test_churn_count": 408,
+  "model_params": {
+    "bootstrap": true,
+    "ccp_alpha": 0,
+    "class_weight": null,
+    "criterion": "gini",
+    "max_depth": null,
+    "max_features": "sqrt",
+    "max_leaf_nodes": null,
+    "max_samples": null,
+    "min_impurity_decrease": 0,
+    "min_samples_leaf": 1,
+    "min_samples_split": 2,
+    "min_weight_fraction_leaf": 0,
+    "monotonic_cst": null,
+    "n_estimators": 100,
+    "n_jobs": -1,
+    "oob_score": false,
+    "random_state": 42,
+    "verbose": 0,
+    "warm_start": false
+  },
+  "accuracy": 0.8375,
+  "precision": 0.6680161943319838,
+  "recall": 0.40441176470588236,
+  "f1": 0.5038167938931297,
+  "roc_auc": 0.8178422751009953,
+  "confusion_matrix": [
+    [
+      1510,
+      82
+    ],
+    [
+      243,
+      165
+    ]
+  ],
+  "evaluation_note": "New six-feature baseline evaluated on a held-out split. Not the deployed model. Original notebook contains KNN and logistic regression, not the original random forest configuration.",
+  "smoke_tests": {
+    "passed": 4,
+    "warnings": 0,
+    "version_mismatch_warning_as_error": true
+  }
+}
