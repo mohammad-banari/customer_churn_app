@@ -14,7 +14,7 @@ Customer churn prediction is a binary classification task: given customer attrib
 - **AI chatbot:** Uses the Groq API to answer questions about machine learning and customer churn, retaining conversation history within the current Streamlit session.
 - **Application state and error handling:** Preserves batch results across Streamlit reruns and handles common model-loading and chatbot API errors.
 
-The current interface uses a mixture of Persian and English labels.
+The application interface and code comments are in English.
 
 ## Technology stack
 
@@ -130,6 +130,32 @@ Age,NumOfProducts,EstimatedSalary,Balance,CreditScore,Tenure
 
 Each row represents one customer. Batch output includes the original columns, a numeric `Prediction` (0 = stayed, 1 = exited), `Churn_Status`, and `Exit_Probability` when available.
 
+## Automated tests
+
+Install development dependencies and run the model smoke tests:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest -v
+```
+
+The four tests cover model loading, single-customer inference, batch inference and probability normalization. They do not measure predictive accuracy. No Groq API key is needed for these tests.
+
+## Model retraining
+
+The existing model was saved with scikit-learn 1.6.1; local testing under 1.9.1 reported version-mismatch warnings. Cross-version pickle loading is unsupported. The existing artifact is retained until a compatible replacement has been trained and validated.
+
+The new `train_model.py` provides a reproducible **baseline** (not a reproduction of the original training notebook). Place the original authorized, labeled CSV in the ignored local `data/` directory. It must include the six model features listed above and a binary `Exited` column (0 = stayed, 1 = exited).
+
+```bash
+python -m pip install -r requirements-dev.txt
+python train_model.py --data data/Churn_Modelling.csv
+```
+
+If the original Random Forest hyperparameters are available, save them in a local JSON object and supply `--params path/to/params.json`. Apply the original preprocessing first, and use the original notebook and split if exact reproduction is required.
+
+The script writes a candidate model and held-out accuracy, precision, recall, F1 and ROC-AUC to `artifacts/`. Review the metrics and compare against the original evaluation before backing up and replacing `random_forest_model.pkl`. Run pytest and manually verify the Streamlit application after replacement. Never upload private customer records.
+
 ## Model and project limitations
 
 - The app performs inference with a saved model; training and evaluation are not performed in the application.
@@ -141,8 +167,8 @@ Each row represents one customer. Batch output includes the original columns, a 
 ## Future improvements
 
 - Document the training dataset, preprocessing pipeline, and model evaluation (e.g. precision, recall, F1-score and ROC-AUC).
-- Add automated tests for input validation and prediction workflows.
-- Add a consistent English-language interface and screenshots.
+- Extend the existing model smoke tests to cover input validation and chatbot workflows.
+- Add application screenshots and verify the live deployment.
 - Improve model explainability and evaluate performance across customer groups.
 
 ## Author
