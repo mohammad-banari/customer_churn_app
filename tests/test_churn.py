@@ -1,5 +1,6 @@
 """Smoke tests for the saved bank customer churn classifier."""
 
+import os
 import pickle
 from pathlib import Path
 
@@ -7,7 +8,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-MODEL_PATH = Path(__file__).resolve().parents[1] / "random_forest_model.pkl"
+MODEL_PATH = Path(os.environ.get(
+    "CHURN_MODEL_PATH",
+    str(Path(__file__).resolve().parents[1] / "random_forest_model.pkl"),
+))
 FEATURE_NAMES = [
     "Age", "NumOfProducts", "EstimatedSalary", "Balance", "CreditScore", "Tenure"
 ]
@@ -15,7 +19,7 @@ FEATURE_NAMES = [
 
 @pytest.fixture(scope="module")
 def model():
-    # Only load the trusted model artifact maintained in this repository.
+    # Only load a trusted repository artifact or locally trained candidate.
     with MODEL_PATH.open("rb") as file:
         return pickle.load(file)
 
