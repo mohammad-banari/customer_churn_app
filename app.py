@@ -66,11 +66,11 @@ try:
     model = load_model()
 except FileNotFoundError:
     model_error = (
-        "فایل random_forest_model.pkl پیدا نشد. "
-        "آن را در همان پوشه app.py قرار دهید."
+        "The random_forest_model.pkl file was not found. "
+        "Place it in the same directory as app.py."
     )
 except Exception as error:
-    model_error = f"خطا در بارگذاری مدل: {error}"
+    model_error = f"Error loading the model: {error}"
 
 
 def get_exit_probabilities(input_data):
@@ -103,8 +103,8 @@ def generate_text(chat_history):
 
     if not api_key:
         raise ValueError(
-            "GROQ_API_KEY تنظیم نشده است. "
-            "کلید را در Streamlit secrets یا متغیر محیطی قرار دهید."
+            "GROQ_API_KEY is not configured. "
+            "Set the key in Streamlit Secrets or an environment variable."
         )
 
     client = Groq(api_key=api_key)
@@ -117,7 +117,7 @@ def generate_text(chat_history):
     answer = response.choices[0].message.content
 
     if not answer:
-        raise ValueError("پاسخ متنی از مدل دریافت نشد.")
+        raise ValueError("No text response was received from the model.")
 
     return answer
 
@@ -145,8 +145,8 @@ st.title("🌳 Customer Churn Prediction & Chatbot")
 
 single_tab, batch_tab, chatbot_tab = st.tabs(
     [
-        "👤 پیش‌بینی یک مشتری",
-        "📄 پیش‌بینی گروهی با CSV",
+        "👤 Single Customer Prediction",
+        "📄 Batch Prediction with CSV",
         "💬 Chatbot",
     ]
 )
@@ -156,7 +156,7 @@ single_tab, batch_tab, chatbot_tab = st.tabs(
 # Single customer prediction
 # ===================================
 with single_tab:
-    st.write("اطلاعات مشتری را وارد کنید.")
+    st.write("Enter the customer information.")
 
     if model is None:
         st.error(model_error)
@@ -230,9 +230,9 @@ with single_tab:
                 prediction = model.predict(input_data)[0]
 
                 if prediction == 1:
-                    st.error("⚠️ نتیجه: احتمال خروج مشتری وجود دارد.")
+                    st.error("⚠️ Result: The customer is likely to churn.")
                 else:
-                    st.success("✅ نتیجه: احتمالاً مشتری باقی می‌ماند.")
+                    st.success("✅ Result: The customer is likely to stay.")
 
                 probabilities = get_exit_probabilities(input_data)
 
@@ -240,33 +240,33 @@ with single_tab:
                     probability = float(probabilities[0])
 
                     st.metric(
-                        "احتمال خروج مشتری",
+                        "Churn Probability",
                         f"{probability:.2%}",
                     )
                     st.progress(probability)
 
-                with st.expander("نمایش اطلاعات واردشده"):
+                with st.expander("View Entered Information"):
                     st.dataframe(
                         input_data,
                         use_container_width=True,
                     )
 
             except Exception as error:
-                st.error(f"خطا هنگام پیش‌بینی: {error}")
+                st.error(f"Error during prediction: {error}")
 
 
 # ===================================
 # Batch prediction
 # ===================================
 with batch_tab:
-    st.subheader("آپلود فایل مشتریان")
+    st.subheader("Upload Customer Data")
 
     if model is None:
         st.error(model_error)
     else:
         st.write(
-            "هر سطر باید مربوط به یک مشتری باشد. "
-            "فایل باید ستون‌های زیر را داشته باشد:"
+            "Each row must represent one customer. "
+            "The file must contain the following columns:"
         )
         st.code(", ".join(FEATURE_NAMES))
 
@@ -280,14 +280,14 @@ with batch_tab:
         })
 
         st.download_button(
-            "⬇️ دانلود قالب نمونه CSV",
+            "⬇️ Download Sample CSV Template",
             data=sample_data.to_csv(index=False).encode("utf-8-sig"),
             file_name="customer_input_template.csv",
             mime="text/csv",
         )
 
         uploaded_file = st.file_uploader(
-            "فایل CSV را انتخاب کنید",
+            "Select a CSV File",
             type=["csv"],
         )
 
@@ -307,10 +307,10 @@ with batch_tab:
                 uploaded_file.seek(0)
                 customer_data = pd.read_csv(uploaded_file)
             except Exception as error:
-                st.error(f"فایل CSV قابل خواندن نیست: {error}")
+                st.error(f"Unable to read the CSV file: {error}")
             else:
                 st.write(
-                    f"تعداد مشتریان موجود در فایل: "
+                    f"Number of customers in the file: "
                     f"**{len(customer_data)}**"
                 )
 
@@ -326,16 +326,16 @@ with batch_tab:
                 ]
 
                 if customer_data.empty:
-                    st.error("فایل CSV خالی است.")
+                    st.error("The CSV file is empty.")
 
                 elif missing_columns:
                     st.error(
-                        "ستون‌های زیر وجود ندارند: "
+                        "The following columns are missing: "
                         + ", ".join(missing_columns)
                     )
 
                 elif st.button(
-                    "🔍 پیش‌بینی برای همه مشتریان",
+                    "🔍 Predict for All Customers",
                     type="primary",
                 ):
                     model_input = customer_data[FEATURE_NAMES].apply(
@@ -354,8 +354,8 @@ with batch_tab:
                         ).tolist()
 
                         st.error(
-                            "مقدار خالی، غیرعددی یا نامعتبر وجود دارد. "
-                            "شماره سطرهای CSV: "
+                            "Missing, nonnumeric, or invalid values were found. "
+                            "CSV row numbers: "
                             + ", ".join(
                                 map(str, invalid_csv_rows[:20])
                             )
@@ -364,7 +364,7 @@ with batch_tab:
                         if len(invalid_csv_rows) > 20:
                             st.warning(
                                 f"{len(invalid_csv_rows) - 20} "
-                                "سطر مشکل‌دار دیگر نیز وجود دارد."
+                                "additional rows contain errors."
                             )
 
                     else:
@@ -391,7 +391,7 @@ with batch_tab:
 
                         except Exception as error:
                             st.error(
-                                f"خطا هنگام پیش‌بینی گروهی: {error}"
+                                f"Error during batch prediction: {error}"
                             )
 
             # Keep results available across Streamlit reruns.
@@ -399,18 +399,18 @@ with batch_tab:
 
             if results is not None:
                 st.success(
-                    f"پیش‌بینی برای {len(results)} مشتری انجام شد."
+                    f"Predictions completed for {len(results)} customers."
                 )
 
                 col1, col2, col3 = st.columns(3)
 
-                col1.metric("تعداد کل", len(results))
+                col1.metric("Total Customers", len(results))
                 col2.metric(
-                    "خروج",
+                    "Exited",
                     int((results["Prediction"] == 1).sum()),
                 )
                 col3.metric(
-                    "ماندن",
+                    "Stayed",
                     int((results["Prediction"] == 0).sum()),
                 )
 
@@ -420,7 +420,7 @@ with batch_tab:
                 )
 
                 st.download_button(
-                    "⬇️ دانلود نتایج پیش‌بینی",
+                    "⬇️ Download Prediction Results",
                     data=results.to_csv(index=False).encode(
                         "utf-8-sig"
                     ),
@@ -436,9 +436,9 @@ with chatbot_tab:
     st.subheader("💬 AI Chatbot")
 
     st.caption(
-        "گفتگو در همین نشست حفظ می‌شود. "
-        "با بارگذاری مجدد صفحه یا شروع نشست جدید ممکن است پاک شود. "
-        "چت‌بات به‌صورت خودکار به فایل CSV یا نتایج پیش‌بینی دسترسی ندارد."
+        "The conversation is retained within the current session. "
+        "It may be cleared when the page is reloaded or a new session begins. "
+        "The chatbot does not automatically have access to the CSV file or prediction results."
     )
 
     if not st.session_state.chatbot_started:
@@ -462,7 +462,7 @@ with chatbot_tab:
                 with st.chat_message(message["role"]):
                     st.markdown(message["content"])
 
-        prompt = st.chat_input("پیام خود را بنویسید...")
+        prompt = st.chat_input("Type your message...")
 
         if prompt:
             with st.chat_message("user"):
@@ -476,7 +476,7 @@ with chatbot_tab:
 
             with st.chat_message("assistant"):
                 try:
-                    with st.spinner("در حال پاسخ دادن..."):
+                    with st.spinner("Generating a response..."):
                         answer = generate_text(request_history)
 
                     st.markdown(answer)
