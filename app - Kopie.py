@@ -6,7 +6,7 @@ import streamlit as st
 
 
 # -----------------------------------
-# تنظیمات صفحه و مدل
+# Page and model configuration
 # -----------------------------------
 st.set_page_config(
     page_title="Customer Churn Prediction",
@@ -27,7 +27,7 @@ FEATURE_NAMES = [
 
 
 # -----------------------------------
-# بارگذاری مدل فقط یک بار
+# Load the model only once
 # -----------------------------------
 @st.cache_resource
 def load_model():
@@ -38,11 +38,11 @@ def load_model():
 try:
     model = load_model()
 except FileNotFoundError:
-    st.error("فایل random_forest_model.pkl پیدا نشد.")
-    st.info("فایل مدل را در همان پوشه‌ای قرار دهید که app.py قرار دارد.")
+    st.error("The random_forest_model.pkl file was not found.")
+    st.info("Place the model file in the same directory as app.py.")
     st.stop()
 except Exception as error:
-    st.error(f"خطا در بارگذاری مدل: {error}")
+    st.error(f"Error loading the model: {error}")
     st.stop()
 
 
@@ -60,19 +60,19 @@ def get_exit_probabilities(input_data):
 
 
 # -----------------------------------
-# عنوان اپلیکیشن
+# Application title
 # -----------------------------------
 st.title("🌳 Customer Churn Prediction")
-st.write("اطلاعات یک یا چند مشتری را وارد کنید تا احتمال خروج آن‌ها پیش‌بینی شود.")
+st.write("Enter information for one or more customers to predict their likelihood of churn.")
 
 single_tab, batch_tab = st.tabs([
-    "👤 پیش‌بینی یک مشتری",
-    "📄 پیش‌بینی گروهی با CSV",
+    "👤 Single Customer Prediction",
+    "📄 Batch Prediction with CSV",
 ])
 
 
 # ===================================
-# پیش‌بینی یک مشتری
+# Single customer prediction
 # ===================================
 with single_tab:
     with st.form("prediction_form"):
@@ -114,37 +114,37 @@ with single_tab:
             prediction = model.predict(input_data)[0]
 
             if prediction == 1:
-                st.error("⚠️ نتیجه: احتمال خروج مشتری وجود دارد.")
+                st.error("⚠️ Result: The customer is likely to churn.")
             else:
-                st.success("✅ نتیجه: احتمالاً مشتری باقی می‌ماند.")
+                st.success("✅ Result: The customer is likely to stay.")
 
             probabilities = get_exit_probabilities(input_data)
             if probabilities is not None:
                 exit_probability = float(probabilities[0])
                 st.metric(
-                    label="احتمال خروج مشتری",
+                    label="Churn Probability",
                     value=f"{exit_probability:.2%}",
                 )
                 st.progress(exit_probability)
 
-            with st.expander("نمایش اطلاعات واردشده"):
+            with st.expander("View Entered Information"):
                 st.dataframe(input_data, use_container_width=True)
 
         except Exception as error:
-            st.error(f"خطا هنگام پیش‌بینی: {error}")
+            st.error(f"Error during prediction: {error}")
 
 
 # ===================================
-# پیش‌بینی چند مشتری با فایل CSV
+# Batch prediction using a CSV file
 # ===================================
 with batch_tab:
-    st.subheader("آپلود فایل مشتریان")
+    st.subheader("Upload Customer Data")
     st.write(
-        "هر سطر فایل باید مربوط به یک مشتری باشد و فایل باید ستون‌های زیر را داشته باشد:"
+        "Each row must represent one customer, and the file must contain the following columns:"
     )
     st.code(", ".join(FEATURE_NAMES))
 
-    # فایل نمونه برای نشان دادن ساختار صحیح CSV
+    # Sample data demonstrating the required CSV structure
     sample_data = pd.DataFrame({
         "Age": [40, 52, 31],
         "NumOfProducts": [1, 2, 1],
@@ -155,25 +155,25 @@ with batch_tab:
     })
 
     st.download_button(
-        label="⬇️ دانلود قالب نمونه CSV",
+        label="⬇️ Download Sample CSV Template",
         data=sample_data.to_csv(index=False).encode("utf-8-sig"),
         file_name="customer_input_template.csv",
         mime="text/csv",
     )
 
     uploaded_file = st.file_uploader(
-        "فایل CSV را انتخاب کنید",
+        "Select a CSV File",
         type=["csv"],
-        help="فایل می‌تواند شامل 10، 100 یا تعداد بیشتری مشتری باشد.",
+        help="The file can contain 10, 100, or more customers.",
     )
 
     if uploaded_file is not None:
         try:
             customer_data = pd.read_csv(uploaded_file)
         except Exception as error:
-            st.error(f"فایل CSV قابل خواندن نیست: {error}")
+            st.error(f"Unable to read the CSV file: {error}")
         else:
-            st.write(f"تعداد مشتریان موجود در فایل: **{len(customer_data)}**")
+            st.write(f"Number of customers in the file: **{len(customer_data)}**")
             st.dataframe(customer_data.head(20), use_container_width=True)
 
             missing_columns = [
@@ -182,14 +182,14 @@ with batch_tab:
             ]
 
             if customer_data.empty:
-                st.error("فایل CSV خالی است.")
+                st.error("The CSV file is empty.")
             elif missing_columns:
                 st.error(
-                    "ستون‌های زیر در فایل وجود ندارند: "
+                    "The following columns are missing from the file: "
                     + ", ".join(missing_columns)
                 )
-            elif st.button("🔍 پیش‌بینی برای همه مشتریان", type="primary"):
-                # فقط فیچرهای مدل و با ترتیب زمان آموزش استفاده می‌شوند.
+            elif st.button("🔍 Predict for All Customers", type="primary"):
+                # Use only the model features in the same order as during training.
                 model_input = customer_data[FEATURE_NAMES].apply(
                     pd.to_numeric,
                     errors="coerce",
@@ -198,18 +198,18 @@ with batch_tab:
                 invalid_rows = model_input.isna().any(axis=1)
 
                 if invalid_rows.any():
-                    # شماره سطر CSV با احتساب سطر عنوان از 2 شروع می‌شود.
+                    # CSV data row numbers start at 2 because the first row contains the header.
                     invalid_csv_rows = (model_input.index[invalid_rows] + 2).tolist()
                     shown_rows = invalid_csv_rows[:20]
                     row_text = ", ".join(map(str, shown_rows))
 
                     st.error(
-                        "در ستون‌های موردنیاز، مقدار خالی یا غیرعددی وجود دارد. "
-                        f"شماره سطرهای مشکل‌دار CSV: {row_text}"
+                        "Missing or nonnumeric values were found in the required columns. "
+                        f"CSV row numbers containing errors: {row_text}"
                     )
                     if len(invalid_csv_rows) > 20:
                         st.warning(
-                            f"{len(invalid_csv_rows) - 20} سطر مشکل‌دار دیگر نیز وجود دارد."
+                            f"{len(invalid_csv_rows) - 20} additional rows contain errors."
                         )
                 else:
                     try:
@@ -229,23 +229,23 @@ with batch_tab:
                         stayed_count = int((predictions == 0).sum())
 
                         st.success(
-                            f"پیش‌بینی برای {len(result_data)} مشتری با موفقیت انجام شد."
+                            f"Predictions successfully completed for {len(result_data)} customers."
                         )
 
                         col1, col2, col3 = st.columns(3)
-                        col1.metric("تعداد کل", len(result_data))
-                        col2.metric("خروج", exited_count)
-                        col3.metric("ماندن", stayed_count)
+                        col1.metric("Total Customers", len(result_data))
+                        col2.metric("Exited", exited_count)
+                        col3.metric("Stayed", stayed_count)
 
                         st.dataframe(result_data, use_container_width=True)
 
                         result_csv = result_data.to_csv(index=False).encode("utf-8-sig")
                         st.download_button(
-                            label="⬇️ دانلود نتایج پیش‌بینی",
+                            label="⬇️ Download Prediction Results",
                             data=result_csv,
                             file_name="customer_churn_predictions.csv",
                             mime="text/csv",
                         )
 
                     except Exception as error:
-                        st.error(f"خطا هنگام پیش‌بینی گروهی: {error}")
+                        st.error(f"Error during batch prediction: {error}")
