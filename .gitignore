@@ -1,0 +1,19 @@
+# Local credentials
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local training data and candidate model artifacts
+data/
+artifacts/
+random_forest_model.candidate.pkl
